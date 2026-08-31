@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.env.*
+venv/
+env/
+*.db
+*.sqlite3
+
+# Secrets — never commit these
+backend/landingai_config.json
+backend/admin_password.json
+backend/sample_pdf_config.json
+backend/default_schema_config.json
+
+# Uploads
+backend/uploads/
+backend/downloads/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.npm
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+
+# Kiro
+.kiro/
