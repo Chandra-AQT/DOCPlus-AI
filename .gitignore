@@ -20,6 +20,12 @@ backend/landingai_config.json
 backend/admin_password.json
 backend/sample_pdf_config.json
 backend/default_schema_config.json
+backend/.env
+frontend/.env
+frontend/.env.local
+# Allow .env.example (safe to commit — no real secrets)
+!backend/.env.example
+!frontend/.env.example
 
 # Uploads
 backend/uploads/
