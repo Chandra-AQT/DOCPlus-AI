@@ -34,7 +34,7 @@ function PdfViewer({ docId, highlightField }) {
     if (!docId) return
     getDocument(docId).then(d => {
       if (d?.file_path) {
-        const url = `http://localhost:8000/uploads/${d.file_path.split(/[\\/]/).pop()}`
+        const url = `${BASE_URL}/uploads/${d.file_path.split(/[\\/]/).pop()}`
         setFileUrl(url)
       }
     }).catch(() => {})

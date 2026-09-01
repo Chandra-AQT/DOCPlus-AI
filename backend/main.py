@@ -59,12 +59,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:3000",
-        # Railway backend self (for API docs)
-        # Vercel frontend — set FRONTEND_URL env var in Railway to your Vercel domain
-        settings.FRONTEND_URL,
-        # Allow all Vercel preview deployments
+        "https://docplus-ai-production.up.railway.app",
         "https://*.vercel.app",
-    ] + ([settings.FRONTEND_URL] if settings.FRONTEND_URL else ["*"]),
+        settings.FRONTEND_URL,
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

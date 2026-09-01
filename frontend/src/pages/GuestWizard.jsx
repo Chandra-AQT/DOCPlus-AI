@@ -85,7 +85,7 @@ function GuestPdfViewer({ docId, highlightField }) {
     api.get(`/api/v1/documents/${docId}`).then(d => {
       if (d.data?.file_path) {
         const fname = d.data.file_path.replace(/\\/g, '/').split('/').pop()
-        setFileUrl(`http://localhost:8000/uploads/${fname}`)
+        setFileUrl(`${BASE_URL}/uploads/${fname}`)
       }
     }).catch(() => {})
   }, [docId])

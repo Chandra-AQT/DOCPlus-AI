@@ -160,19 +160,37 @@ def process_page(url, domain, visited_set, pdf_set, lock):
 
 
 def crawl_website(start_url, max_pages=200, batch_size=10, max_workers=10,
-                  progress_callback=None):
+                  progress_callback=None, max_seconds=90):
     """
     Crawl start_url and return a list of discovered document links.
     Falls back to crawling the root domain if the given sub-path yields nothing.
+    Hard timeout: stops crawling after max_seconds (default 90s).
     """
+    import time
     visited_set = set()
     pdf_set = set()
     lock = threading.Lock()
+    start_time = time.time()
 
     parsed_start = urlparse(start_url)
     domain = parsed_start.netloc
     if not domain:
         raise ValueError("Invalid start URL")
+
+    # Quick pre-check: can we even reach the site?
+    try:
+        r = requests.get(start_url, headers=HEADERS, timeout=15,
+                        allow_redirects=True, verify=False)
+        ct = r.headers.get("content-type", "").lower()
+        # If the site returns nothing useful (JS-only SPA with no PDF links visible)
+        html_preview = r.text[:5000].lower()
+        has_any_links = bool(re.search(r'href=["\'].*?(?:pdf|doc|xls)', html_preview))
+        if r.status_code != 200:
+            raise ValueError(f"Site returned HTTP {r.status_code} — cannot crawl")
+    except requests.exceptions.Timeout:
+        raise ValueError("Site did not respond within 15 seconds — try a different URL")
+    except requests.exceptions.ConnectionError:
+        raise ValueError("Cannot connect to this website — check the URL and try again")
 
     # Always start from the given URL, but if it yields nothing add root
     start_urls = [start_url]
@@ -184,6 +202,11 @@ def crawl_website(start_url, max_pages=200, batch_size=10, max_workers=10,
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         while queue and len(visited_set) < max_pages:
+            # Hard timeout — stop if crawl exceeds max_seconds
+            if time.time() - start_time > max_seconds:
+                print(f"[CRAWL] Hard timeout after {max_seconds}s — stopping with {len(pdf_set)} docs found")
+                break
+
             current_batch = []
             while queue and len(current_batch) < batch_size and len(visited_set) < max_pages:
                 next_url = queue.pop(0)

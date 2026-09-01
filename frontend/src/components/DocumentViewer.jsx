@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BASE_URL } from '../lib/api'
 import {
   X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut,
   Zap, FileText, Code2, BookOpen, Layers3,
@@ -307,9 +308,8 @@ export default function DocumentViewer({ docId, onClose, onRunExtraction }) {
     const fp = (doc.file_path || '').replace(/\\/g, '/')
     // Extract just the filename
     const fname = fp.split('/').filter(Boolean).pop()
-    if (fname) return `http://localhost:8000/uploads/${fname}`
-    // Fallback: use doc id
-    return `http://localhost:8000/uploads/${doc.id}.pdf`
+    if (fname) return `${BASE_URL}/uploads/${fname}`
+    return `${BASE_URL}/uploads/${doc.id}.pdf`
   })()
 
   const handleRunExtraction = () => {
