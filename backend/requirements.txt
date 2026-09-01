@@ -1,29 +1,51 @@
+# Core web framework
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
-requests==2.32.3
-beautifulsoup4==4.12.3
-openpyxl==3.1.5
 python-multipart==0.0.9
+
+# Database
 sqlalchemy==2.0.30
+
+# Validation
 pydantic==2.7.1
 pydantic-settings==2.2.1
+
+# HTTP clients
+requests==2.32.3
 httpx==0.27.0
 aiofiles==23.2.1
+
+# Auth
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
-pypdf2==3.0.1
-pdfminer.six==20221105
+
+# PDF processing
 pymupdf==1.24.2
+pdfminer.six==20221105
 pillow==10.3.0
-pytesseract==0.3.10
+python-docx==1.1.2
+pypdf2==3.0.1
+
+# Web crawling
+beautifulsoup4==4.12.3
+
+# Data/export
+openpyxl==3.1.5
 pandas==2.2.2
 tabulate==0.9.0
-python-dotenv==1.0.1
+
+# AI providers
 openai==1.30.1
 anthropic==0.28.0
 google-generativeai==0.5.4
 groq==0.8.0
+landingai-ade==1.12.0
+
+# Email validation
+dnspython==2.6.1
+
+# Utilities
+python-dotenv==1.0.1
 loguru==0.7.2
 tenacity==8.3.0
-python-docx==1.1.2
