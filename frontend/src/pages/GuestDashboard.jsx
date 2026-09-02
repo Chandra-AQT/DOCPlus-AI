@@ -93,7 +93,17 @@ export default function GuestDashboard() {
   useEffect(() => {
     const h = new Date().getHours()
     setTimeOfDay(h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening')
-    refreshGuestUsage().then(() => setLimits(getGuestLimits()))
+
+    // Refresh from server — if full_access was granted, redirect to dashboard
+    refreshGuestUsage().then(updated => {
+      if (updated?.full_access) {
+        // Guest has been upgraded — go to full platform
+        window.location.href = '/dashboard'
+        return
+      }
+      setLimits(getGuestLimits())
+    })
+
     // Load persisted jobs from DB (survive page refresh)
     getGuestJobs().then(r => setPersistedJobs(r.jobs || [])).catch(() => {})
   }, [])

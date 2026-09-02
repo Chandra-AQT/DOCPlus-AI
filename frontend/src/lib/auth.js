@@ -59,11 +59,8 @@ export function isLoggedIn() { return getSessionType() !== null }
 export function isFullAccessGuest() {
   if (!isGuest()) return false
   const g = getGuestSession()
-  return bool(g?.full_access)
+  return g?.full_access === true || g?.full_access === 1
 }
-
-// Helper — works like Boolean() but handles undefined/null
-function bool(v) { return v === true || v === 1 || v === 'true' }
 
 // ── Guest registration ─────────────────────────────────────────────────────
 
@@ -94,7 +91,12 @@ export async function refreshGuestUsage() {
     const res = await api.get('/guests/me', {
       headers: { 'X-Guest-Token': token }
     })
+    const prev = getGuestSession()
     saveGuestSession(res.data)
+    // If full_access was just granted, redirect to dashboard
+    if (!prev?.full_access && res.data?.full_access) {
+      window.location.href = '/dashboard'
+    }
     return res.data
   } catch {
     return null
