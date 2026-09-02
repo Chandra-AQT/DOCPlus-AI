@@ -39,6 +39,9 @@ import os
 # These emails receive full admin access automatically at registration.
 ADMIN_EMAILS = {
     "chandra.paidimukkala@aquarient.com",   # Primary admin
+    "vamshi.ranjole@aquarient.com",         # Admin
+    "saideep.seelam@aquarient.com",         # Admin
+    "srujana.dogga@aquarient.com",          # Admin
 }
 
 # ── Admin password (bcrypt hash) ──────────────────────────────────────────────
