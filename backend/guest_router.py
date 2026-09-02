@@ -537,6 +537,13 @@ def register_guest(req: GuestRegisterRequest, db: Session = Depends(get_db)):
     except Exception:
         pass
 
+    # Create Salesforce Lead — fire and forget, never blocks registration
+    try:
+        from salesforce_service import create_lead
+        create_lead(guest)
+    except Exception:
+        pass  # Salesforce failure must never break registration
+
     return {"guest": guest_to_response(guest, is_returning=False), "is_returning": False}
 
 
@@ -1679,6 +1686,16 @@ def approve_access_request(
     db.commit()
 
     log_guest_activity(db, guest.id, "access_approved", f"type={req.request_type}")
+
+    # Update Salesforce Lead status — guest is now a hot lead
+    try:
+        from salesforce_service import update_lead_status
+        if req.request_type == "full_access":
+            update_lead_status(guest.email, "Closed - Converted")
+        else:
+            update_lead_status(guest.email, "Working - Contacted")
+    except Exception:
+        pass
 
     return {"ok": True, "guest": guest_to_response(guest)}
 
