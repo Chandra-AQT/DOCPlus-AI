@@ -15,7 +15,7 @@ import AdminLoginPage from './pages/AdminLoginPage'
 import AdminPage from './pages/AdminPage'
 import GuestWizard from './pages/GuestWizard'
 import GuestDashboard from './pages/GuestDashboard'
-import { isLoggedIn, isGuest, isFullAccessGuest, getGuestSession } from './lib/auth'
+import { isLoggedIn, isGuest, isFullAccessGuest } from './lib/auth'
 
 // ── Error boundary ────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -66,14 +66,6 @@ function RequireRealAdmin({ children }) {
   if (!isLoggedIn()) return <Navigate to="/" state={{ from: location }} replace />
   if (isGuest()) return <Navigate to="/dashboard" replace />  // full-access guest can't access admin panel
   return children
-}
-
-// ── Smart dashboard: full-access guest or admin → Layout, regular guest → GuestDashboard
-function SmartRoot() {
-  if (!isLoggedIn()) return <Navigate to="/" replace />
-  if (isGuest() && isFullAccessGuest()) return <Navigate to="/dashboard" replace />
-  if (isGuest()) return <Navigate to="/guest-dashboard" replace />
-  return <Navigate to="/dashboard" replace />
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
