@@ -10,7 +10,7 @@ import GuestBanner from './GuestBanner'
 import GuestTour from './GuestTour'
 import GuestHelpButton from './GuestHelpButton'
 import RobotMascot from './RobotMascot'
-import { isGuest, isAdmin, getGuestSession, getGuestLimits, logout } from '../lib/auth'
+import { isGuest, isAdmin, getGuestSession, getGuestLimits, logout, isFullAccessGuest } from '../lib/auth'
 
 // ── Guest top-bar badge with live usage counters ──────────────────────────────
 function GuestTopBadge() {
@@ -321,8 +321,8 @@ export default function Layout() {
                 style={{ background: 'rgba(124,58,237,0.15)', color: '#c4b5fd', border: '1px solid rgba(124,58,237,0.25)' }}>
                 <Shield className="w-3.5 h-3.5" /> Admin · Full Access
               </span>
-            ) : isGuest() ? (
-              /* Guest trial badge with live counters */
+            ) : isGuest() && !isFullAccessGuest() ? (
+              /* Guest trial badge with live counters — hidden for full-access guests */
               <GuestTopBadge />
             ) : null}
             {state.library.length > 0 && (
@@ -333,7 +333,8 @@ export default function Layout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">
-          {isGuest() && <GuestBanner />}
+          {/* GuestBanner — only for regular trial guests, not full-access */}
+          {isGuest() && !isFullAccessGuest() && <GuestBanner />}
           <Outlet />
         </main>
       </div>
