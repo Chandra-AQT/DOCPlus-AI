@@ -55,6 +55,16 @@ export function isAdmin() { return getSessionType() === 'admin' }
 export function isGuest() { return getSessionType() === 'guest' }
 export function isLoggedIn() { return getSessionType() !== null }
 
+// Guest with full platform access — shows admin sidebar but NOT admin panel
+export function isFullAccessGuest() {
+  if (!isGuest()) return false
+  const g = getGuestSession()
+  return bool(g?.full_access)
+}
+
+// Helper — works like Boolean() but handles undefined/null
+function bool(v) { return v === true || v === 1 || v === 'true' }
+
 // ── Guest registration ─────────────────────────────────────────────────────
 
 export async function registerGuest(data) {
@@ -105,6 +115,7 @@ export function getGuestLimits() {
     extractionRemaining: g.extraction_remaining  || 0,
     uploadAllowed:       g.upload_allowed        || false,
     exportAllowed:       g.export_allowed        || false,
+    fullAccess:          g.full_access           || false,
   }
 }
 

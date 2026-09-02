@@ -284,6 +284,7 @@ class GuestLimitUpdate(BaseModel):
     is_active:         Optional[bool] = None
     upload_allowed:    Optional[bool] = None
     export_allowed:    Optional[bool] = None
+    full_access:       Optional[bool] = None
 
 
 def guest_to_response(g: Guest, is_returning: bool = False) -> dict:
@@ -306,6 +307,7 @@ def guest_to_response(g: Guest, is_returning: bool = False) -> dict:
         "extraction_remaining": g.extraction_remaining,
         "upload_allowed":       bool(g.upload_allowed),
         "export_allowed":       bool(g.export_allowed),
+        "full_access":          bool(getattr(g, 'full_access', False)),
         "is_business_email":    bool(getattr(g, 'is_business_email', True)),
         "email_verified":       bool(getattr(g, 'email_verified', False)),
         "is_returning":         is_returning,
@@ -611,6 +613,13 @@ def update_guest_limits(
     if req.is_active        is not None: g.is_active        = req.is_active
     if req.upload_allowed   is not None: g.upload_allowed   = req.upload_allowed
     if req.export_allowed   is not None: g.export_allowed   = req.export_allowed
+    if req.full_access      is not None:
+        g.full_access = req.full_access
+        if req.full_access:  # auto-set all permissions when granting full access
+            g.upload_allowed   = True
+            g.export_allowed   = True
+            g.pdf_fetch_limit  = max(g.pdf_fetch_limit, 999)
+            g.extraction_limit = max(g.extraction_limit, 999)
     db.commit()
     return guest_to_response(g)
 
@@ -1660,6 +1669,9 @@ def approve_access_request(
     elif req.request_type == "full_access":
         guest.pdf_fetch_limit  = 999
         guest.extraction_limit = 999
+        guest.upload_allowed   = True
+        guest.export_allowed   = True
+        guest.full_access      = True   # ← grants full platform UI
     # export is handled frontend-side via is_active flag for now
 
     req.status      = "approved"

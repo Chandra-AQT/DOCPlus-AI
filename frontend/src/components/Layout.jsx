@@ -206,7 +206,7 @@ export default function Layout() {
             )}
           </NavLink>
         ))}
-        {/* Admin link — only for admin users */}
+        {/* Admin link — only for real admin users, NOT full-access guests */}
         {isAdmin() && (
           <NavLink to="/admin"
             className={({ isActive }) =>

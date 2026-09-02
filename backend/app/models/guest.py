@@ -35,6 +35,7 @@ class Guest(Base):
     # Permissions granted by admin
     upload_allowed = Column(Boolean, default=False)  # Manual file upload (off by default)
     export_allowed = Column(Boolean, default=False)  # Export results (off by default)
+    full_access    = Column(Boolean, default=False)  # Full platform access (admin sidebar, no limits)
 
     # Email quality signals — useful for sales outreach
     is_business_email = Column(Boolean, default=True)   # False = gmail/yahoo/hotmail etc.

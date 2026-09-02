@@ -11,6 +11,7 @@ migrations = [
     # (table, column, definition)
     ("guests",          "upload_allowed",     "BOOLEAN DEFAULT 0"),
     ("guests",          "export_allowed",     "BOOLEAN DEFAULT 0"),
+    ("guests",          "full_access",        "BOOLEAN DEFAULT 0"),
     ("guests",          "is_business_email",  "BOOLEAN DEFAULT 1"),
     ("guests",          "email_verified",     "BOOLEAN DEFAULT 0"),
     ("extraction_jobs", "guest_id",           "TEXT DEFAULT NULL"),
