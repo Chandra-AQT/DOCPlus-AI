@@ -94,3 +94,29 @@ def update_lead_status(email: str, status: str = "Working - Contacted") -> bool:
     """
     logger.debug(f"[SALESFORCE] Lead status update not supported via Web-to-Lead for {email}")
     return False
+
+
+def test_web_to_lead() -> dict:
+    """
+    Send a test lead to Salesforce to verify the integration works.
+    Call this from the admin test endpoint.
+    """
+    class _TestGuest:
+        first_name = "DOCPlus"
+        last_name  = "Test"
+        email      = "test.lead@docplusai.com"
+        company    = "DOCPlus AI Test"
+        current_role = "Test"
+        note       = "This is a test lead from DOCPlus AI+"
+        pdf_fetch_limit   = 5
+        extraction_limit  = 2
+        is_business_email = True
+        email_verified    = False
+
+    result = create_lead(_TestGuest())
+    return {
+        "success": result is not None,
+        "result":  result,
+        "org_id":  SF_ORG_ID,
+        "enabled": SF_ENABLED,
+    }

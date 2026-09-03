@@ -663,9 +663,7 @@ def reset_guest_usage(
 
 @router.post("/admin/notify-test")
 def test_notification(_admin: User = Depends(require_admin)):
-    """
-    Admin: send a test email notification to verify Graph API / SMTP is working.
-    """
+    """Admin: send a test email notification to verify Graph API / SMTP is working."""
     class _DummyGuest:
         full_name      = "Test Guest"
         email          = "test@example.com"
@@ -681,6 +679,17 @@ def test_notification(_admin: User = Depends(require_admin)):
         return {"ok": True, "message": f"Test notification sent to {ADMIN_EMAIL}"}
     except Exception as e:
         raise HTTPException(500, f"Notification failed: {e}")
+
+
+@router.post("/admin/salesforce-test")
+def test_salesforce(_admin: User = Depends(require_admin)):
+    """Admin: send a test lead to Salesforce to verify Web-to-Lead integration."""
+    try:
+        from salesforce_service import test_web_to_lead
+        result = test_web_to_lead()
+        return result
+    except Exception as e:
+        raise HTTPException(500, f"Salesforce test failed: {e}")
 
 
 # ── Admin LandingAI config for guest extraction ───────────────────────────────
