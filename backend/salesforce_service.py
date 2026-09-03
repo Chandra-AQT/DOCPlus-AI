@@ -60,16 +60,16 @@ def create_lead(guest) -> Optional[str]:
 
         # Web-to-Lead form fields
         data = urllib.parse.urlencode({
-            "oid":         SF_ORG_ID,
-            "retURL":      SF_RET_URL,
-            "first_name":  guest.first_name or "",
-            "last_name":   guest.last_name  or "Unknown",
-            "email":       guest.email,
-            "company":     guest.company or guest.email.split("@")[1],
-            "description": description,
-            "lead_source": "Web",
-            # Optional: pass role as title if field exists in your SF org
-            # "title":     guest.current_role or "",
+            "oid":              SF_ORG_ID,
+            "retURL":           SF_RET_URL,
+            "recordType":       "012Hs000002G8opIAC",   # DOCPlus AI record type
+            "recordTypeId":     "012Hs000002G8opIAC",   # same, both formats used by SF
+            "first_name":       guest.first_name or "",
+            "last_name":        guest.last_name  or "Unknown",
+            "email":            guest.email,
+            "company":          guest.company or guest.email.split("@")[1],
+            "description":      description,
+            "lead_source":      "DOCPlusAI",             # hardcoded as required
         }).encode("utf-8")
 
         req = urllib.request.Request(SF_ENDPOINT, data=data, method="POST")
