@@ -16,8 +16,8 @@ from loguru import logger
 
 
 # ── Salesforce Web-to-Lead config ─────────────────────────────────────────────
-SF_ORG_ID   = "00Df600000TRI9p"
-SF_ENDPOINT = "https://webto.salesforce.com/servlet/servlet.WebToLead"
+SF_ORG_ID   = "00DHs00000P5yok"
+SF_ENDPOINT = "https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8&orgId=00DHs00000P5yok"
 SF_RET_URL  = os.getenv("FRONTEND_URL", "https://energetic-happiness-production-1c3f.up.railway.app") + "/guest-dashboard"
 
 # Set to True to enable (change to False to disable without code change)
