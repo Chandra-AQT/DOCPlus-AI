@@ -32,6 +32,7 @@ def get_db():
 def init_db():
     from app.models import document, schema, job, user, guest  # noqa — registers all models
     from app.models import guest_activity  # noqa — registers activity + access request tables
+    from app.models import lineage  # noqa — registers FieldLineage table (Feature 2)
     Base.metadata.create_all(bind=engine)
     _apply_migrations()
     _seed_preset_schemas()
@@ -426,6 +427,32 @@ def _apply_migrations():
         "users": [
             ("last_login", "TIMESTAMP"),
             ("is_admin",   "BOOLEAN DEFAULT FALSE"),
+        ],
+        # ── Feature 2: Data Lineage & Evidence Layer ──────────────────────────
+        # field_lineage is created fresh via create_all; these guards handle
+        # the edge case where the table exists but is missing a new column.
+        "field_lineage": [
+            ("id",               "VARCHAR"),
+            ("job_id",           "VARCHAR"),
+            ("document_id",      "VARCHAR"),
+            ("schema_name",      "VARCHAR"),
+            ("field_name",       "VARCHAR"),
+            ("field_path",       "VARCHAR"),
+            ("extracted_value",  "TEXT"),
+            ("normalized_value", "TEXT"),
+            ("unit",             "VARCHAR"),
+            ("source_type",      "VARCHAR"),
+            ("source_label",     "VARCHAR"),
+            ("source_text",      "TEXT"),
+            ("page_number",      "INTEGER"),
+            ("section",          "VARCHAR"),
+            ("confidence",       "FLOAT"),
+            ("is_fallback",      "INTEGER DEFAULT 0"),
+            ("has_error",        "INTEGER DEFAULT 0"),
+            ("ai_model",         "VARCHAR"),
+            ("ai_provider",      "VARCHAR"),
+            ("extraction_date",  "TIMESTAMP"),
+            ("document_version", "VARCHAR"),
         ],
     }
 

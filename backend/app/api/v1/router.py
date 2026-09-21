@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import documents, schemas, extraction, export, jobs, batch, compare, chat, intelligence, auth, webcrawl
 from app.api.v1.endpoints import parse
+from app.api.v1.endpoints import lineage  # Feature 2: Data Lineage & Evidence Layer
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
@@ -15,3 +16,4 @@ api_router.include_router(compare.router)
 api_router.include_router(chat.router)
 api_router.include_router(intelligence.router)
 api_router.include_router(webcrawl.router)
+api_router.include_router(lineage.router)  # Feature 2: /api/v1/lineage/*

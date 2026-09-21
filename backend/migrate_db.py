@@ -20,6 +20,32 @@ migrations = [
     ("extraction_jobs", "batch_run_id",       "TEXT DEFAULT NULL"),
     ("documents",       "upload_source",      "TEXT DEFAULT 'single'"),
     ("documents",       "batch_id",           "TEXT DEFAULT NULL"),
+
+    # ── Feature 2: Data Lineage & Evidence Layer ──────────────────────────────
+    # field_lineage is created by SQLAlchemy create_all on first run.
+    # These entries handle upgrades on existing databases where the table
+    # already exists but may be missing a column added in a later release.
+    ("field_lineage",   "id",               "TEXT DEFAULT NULL"),
+    ("field_lineage",   "job_id",           "TEXT DEFAULT NULL"),
+    ("field_lineage",   "document_id",      "TEXT DEFAULT NULL"),
+    ("field_lineage",   "schema_name",      "TEXT DEFAULT NULL"),
+    ("field_lineage",   "field_name",       "TEXT DEFAULT NULL"),
+    ("field_lineage",   "field_path",       "TEXT DEFAULT NULL"),
+    ("field_lineage",   "extracted_value",  "TEXT DEFAULT NULL"),
+    ("field_lineage",   "normalized_value", "TEXT DEFAULT NULL"),
+    ("field_lineage",   "unit",             "TEXT DEFAULT NULL"),
+    ("field_lineage",   "source_type",      "TEXT DEFAULT NULL"),
+    ("field_lineage",   "source_label",     "TEXT DEFAULT NULL"),
+    ("field_lineage",   "source_text",      "TEXT DEFAULT NULL"),
+    ("field_lineage",   "page_number",      "INTEGER DEFAULT NULL"),
+    ("field_lineage",   "section",          "TEXT DEFAULT NULL"),
+    ("field_lineage",   "confidence",       "REAL DEFAULT NULL"),
+    ("field_lineage",   "is_fallback",      "INTEGER DEFAULT 0"),
+    ("field_lineage",   "has_error",        "INTEGER DEFAULT 0"),
+    ("field_lineage",   "ai_model",         "TEXT DEFAULT NULL"),
+    ("field_lineage",   "ai_provider",      "TEXT DEFAULT NULL"),
+    ("field_lineage",   "extraction_date",  "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+    ("field_lineage",   "document_version", "TEXT DEFAULT NULL"),
 ]
 
 def column_exists(conn, table, column):
@@ -38,14 +64,27 @@ def run_migrations():
     skipped = 0
 
     for table, column, definition in migrations:
+        # Skip if the table doesn't exist yet (e.g. field_lineage before first run)
+        cursor = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        )
+        if not cursor.fetchone():
+            print(f"  SKIP  {table}.{column} — table does not exist yet (created on first run)")
+            skipped += 1
+            continue
+
         if column_exists(conn, table, column):
             print(f"  SKIP  {table}.{column} — already exists")
             skipped += 1
         else:
-            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
-            conn.commit()
-            print(f"  OK    {table}.{column} {definition} — added")
-            applied += 1
+            try:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+                conn.commit()
+                print(f"  OK    {table}.{column} {definition} — added")
+                applied += 1
+            except Exception as e:
+                print(f"  WARN  {table}.{column} — {e}")
+                skipped += 1
 
     # Fix existing documents that have NULL upload_source
     # Logic: if multiple docs were uploaded within the same second → they are 'batch'

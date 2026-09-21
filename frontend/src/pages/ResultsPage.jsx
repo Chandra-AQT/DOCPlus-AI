@@ -15,6 +15,8 @@ import { useWorkflow } from '../lib/store'
 import api, { exportResults, getDocument } from '../lib/api'
 import { downloadBlob } from '../lib/utils'
 import { isAdmin, isGuest } from '../lib/auth'
+import SourceBadge from '../components/SourceBadge'
+import EvidenceDrawer from '../components/EvidenceDrawer'
 
 // ── PDF Viewer (left panel) ───────────────────────────────────────────────────
 function PdfViewer({ docId, highlightField }) {
@@ -281,6 +283,9 @@ function JobResultsPanel({ job, onUpdate, onHighlight }) {
   const [hitlState,      setHitlState]      = useState({}) // { [recIdx]: { [field]: 'pending'|'approved'|'rejected' } }
   const [fieldEdits,     setFieldEdits]     = useState({}) // { [recIdx]: { [field]: editedValue } }
   const [editingField,   setEditingField]   = useState(null) // { recIdx, key }
+  // Feature 2: Evidence Drawer state
+  const [evidenceOpen,   setEvidenceOpen]   = useState(false)
+  const [evidenceField,  setEvidenceField]  = useState(null)  // { fieldName, fieldValue }
 
   const fields  = job.fields || {}
   const confs   = job.confidence_scores || {}
@@ -491,6 +496,15 @@ function JobResultsPanel({ job, onUpdate, onHighlight }) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
+
+      {/* Feature 2: Evidence Drawer */}
+      <EvidenceDrawer
+        jobId={job.job_id}
+        fieldName={evidenceField?.fieldName}
+        fieldValue={evidenceField?.fieldValue}
+        open={evidenceOpen}
+        onClose={() => setEvidenceOpen(false)}
+      />
 
       {/* ── Top bar ── */}
       <div className="px-5 py-3 shrink-0 flex items-center justify-between flex-wrap gap-2"
@@ -796,6 +810,14 @@ function JobResultsPanel({ job, onUpdate, onHighlight }) {
 
                                     {/* Hover actions */}
                                     <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                      {/* Feature 2: Source badge → opens Evidence drawer */}
+                                      {src && (
+                                        <SourceBadge
+                                          sourceType={src}
+                                          compact
+                                          onClick={() => { setEvidenceField({ fieldName: key, fieldValue: val }); setEvidenceOpen(true) }}
+                                        />
+                                      )}
                                       {src && src !== 'fallback' && !empty && onHighlight && (
                                         <button onClick={() => onHighlight({ field: key, src })}
                                           className="p-0.5 rounded" title="Source in PDF"
@@ -917,6 +939,14 @@ function JobResultsPanel({ job, onUpdate, onHighlight }) {
                                     title={!empty && onHighlight ? 'Click to highlight in PDF' : undefined}>
                                     {empty ? '—' : Array.isArray(val) ? val.join(', ') : String(val)}
                                   </span>
+                                  {/* Feature 2: Source badge — always visible, opens Evidence drawer */}
+                                  {src && (
+                                    <SourceBadge
+                                      sourceType={src}
+                                      compact
+                                      onClick={() => { setEvidenceField({ fieldName: key, fieldValue: val }); setEvidenceOpen(true) }}
+                                    />
+                                  )}
                                   {src && src !== 'fallback' && !empty && onHighlight && (
                                     <button onClick={() => onHighlight({ field: key, value: String(val), src })}
                                       className="opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity"

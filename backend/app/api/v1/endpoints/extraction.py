@@ -37,6 +37,7 @@ from app.models.job import ExtractionJob
 from app.models.schema import SchemaDefinition
 from app.services.parser import parse_document
 from app.services.pipeline import run_extraction
+from app.services.lineage_writer import write_lineage, write_lineage_multi
 
 router = APIRouter(prefix="/extraction", tags=["Extraction"])
 
@@ -468,6 +469,47 @@ async def run_extraction_endpoint(
         except Exception:
             pass
         db.commit()
+
+        # ── Feature 2: Write field-level lineage (non-fatal) ──────────────────
+        try:
+            _doc_version = None
+            try:
+                _doc_version = (doc.parsed_data or {}).get("metadata", {}).get("title") or None
+            except Exception:
+                pass
+
+            _ai_model = req.provider_config.model or None
+
+            # Multi-record result (LandingAI records[] or pipeline records[])
+            _records = extraction.get("records") or []
+            if _records and isinstance(_records, list) and isinstance(_records[0], dict):
+                write_lineage_multi(
+                    db,
+                    job_id           = job_id,
+                    document_id      = req.document_id,
+                    schema_name      = schema_name,
+                    records          = _records,
+                    ai_model         = _ai_model,
+                    document_version = _doc_version,
+                )
+            else:
+                # Single-result extraction
+                write_lineage(
+                    db,
+                    job_id            = job_id,
+                    document_id       = req.document_id,
+                    schema_name       = schema_name,
+                    schema_fields     = schema_dict.get("fields", []),
+                    extraction_result = extraction.get("result", {}),
+                    confidence        = extraction.get("confidence", {}),
+                    sources           = extraction.get("sources", {}),
+                    evidence          = extraction.get("evidence", {}),
+                    validation_errors = extraction.get("validation", {}),
+                    ai_model          = _ai_model,
+                    document_version  = _doc_version,
+                )
+        except Exception as _le:
+            logger.warning(f"[LINEAGE] Non-fatal lineage write error for job {job_id}: {_le}")
     except HTTPException:
         raise
     except Exception as e:
@@ -568,6 +610,25 @@ async def run_inline_extraction(
         job.status = "completed"
         job.result = extraction
         db.commit()
+
+        # ── Feature 2: Write lineage (non-fatal) ──────────────────────────────
+        try:
+            write_lineage(
+                db,
+                job_id            = job_id,
+                document_id       = doc_id,
+                schema_name       = schema_dict.get("name", "inline"),
+                schema_fields     = schema_dict.get("fields", []),
+                extraction_result = extraction.get("result", {}),
+                confidence        = extraction.get("confidence", {}),
+                sources           = extraction.get("sources", {}),
+                evidence          = extraction.get("evidence", {}),
+                validation_errors = extraction.get("validation", {}),
+                ai_model          = model or None,
+                document_version  = None,
+            )
+        except Exception as _le:
+            logger.warning(f"[LINEAGE] Non-fatal lineage write error for inline job {job_id}: {_le}")
     except Exception as e:
         job.status = "failed"
         job.error = str(e)
