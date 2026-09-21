@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useWorkflow } from '../lib/store'
-import api, { exportResults, getDocument } from '../lib/api'
+import api, { exportResults, getDocument, BASE_URL } from '../lib/api'
 import { downloadBlob } from '../lib/utils'
 import { isAdmin, isGuest } from '../lib/auth'
 import SourceBadge from '../components/SourceBadge'
@@ -30,42 +30,73 @@ function PdfViewer({ docId, highlightField }) {
   const [fileUrl,    setFileUrl]    = useState(null)
   const [highlight,  setHighlight]  = useState(null) // { text, rects }
   const [searchMsg,  setSearchMsg]  = useState('')
+  const [pdfError,   setPdfError]   = useState(null) // null | 'not_found' | 'load_error'
 
   // Load document URL
   useEffect(() => {
     if (!docId) return
+    setPdfError(null)
     getDocument(docId).then(d => {
       if (d?.file_path) {
-        const url = `${BASE_URL}/uploads/${d.file_path.split(/[\\/]/).pop()}`
+        const filename = d.file_path.split(/[\\/]/).pop()
+        const url = `${BASE_URL}/uploads/${filename}`
         setFileUrl(url)
+      } else {
+        setPdfError('not_found')
       }
-    }).catch(() => {})
+    }).catch(() => setPdfError('not_found'))
   }, [docId])
 
-  // Load PDF.js
+  // Load PDF.js — waits for CDN script, then loads the PDF
   useEffect(() => {
     if (!fileUrl) return
+    setPdfError(null)
+
     const loadPdf = async () => {
       try {
         setLoading(true)
         const pdfjsLib = window['pdfjs-dist/build/pdf']
-        if (!pdfjsLib) return
+        if (!pdfjsLib) { setLoading(false); return }
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+        // Test if the file actually exists before loading into PDF.js
+        const probe = await fetch(fileUrl, { method: 'HEAD' }).catch(() => null)
+        if (probe && !probe.ok) {
+          setPdfError('not_found')
+          setLoading(false)
+          return
+        }
         const pdf = await pdfjsLib.getDocument(fileUrl).promise
         setPdfDoc(pdf)
         setTotal(pdf.numPages)
         setLoading(false)
-      } catch { setLoading(false) }
+      } catch (err) {
+        setLoading(false)
+        const msg = String(err?.message || err || '').toLowerCase()
+        if (msg.includes('404') || msg.includes('not found') || msg.includes('missing pdf')) {
+          setPdfError('not_found')
+        } else {
+          setPdfError('load_error')
+        }
+      }
     }
+
     if (window['pdfjs-dist/build/pdf']) {
       loadPdf()
     } else {
-      const s = document.createElement('script')
-      s.id  = 'pdfjs-script'
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
-      s.onload = loadPdf
-      document.head.appendChild(s)
+      // Avoid adding duplicate scripts
+      if (!document.getElementById('pdfjs-script')) {
+        const s = document.createElement('script')
+        s.id  = 'pdfjs-script'
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
+        s.onload = loadPdf
+        s.onerror = () => { setLoading(false); setPdfError('load_error') }
+        document.head.appendChild(s)
+      } else {
+        // Script tag exists but not yet loaded — wait for it
+        const existing = document.getElementById('pdfjs-script')
+        existing.addEventListener('load', loadPdf, { once: true })
+      }
     }
   }, [fileUrl])
 
@@ -173,6 +204,37 @@ function PdfViewer({ docId, highlightField }) {
       <div className="text-center">
         <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
         <p className="text-sm">No document selected</p>
+      </div>
+    </div>
+  )
+
+  // PDF not available on server (ephemeral storage on Railway, or file deleted)
+  if (pdfError === 'not_found') return (
+    <div className="flex items-center justify-center h-full">
+      <div className="text-center px-6">
+        <FileText className="w-10 h-10 mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.15)' }} />
+        <p className="text-sm font-bold mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>PDF not available</p>
+        <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.25)' }}>
+          The original file is no longer on the server.<br />
+          Extraction results are still fully available.
+        </p>
+      </div>
+    </div>
+  )
+
+  if (pdfError === 'load_error') return (
+    <div className="flex items-center justify-center h-full">
+      <div className="text-center px-6">
+        <AlertCircle className="w-10 h-10 mx-auto mb-3" style={{ color: 'rgba(239,68,68,0.4)' }} />
+        <p className="text-sm font-bold mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Could not load PDF</p>
+        <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.25)' }}>
+          The PDF viewer encountered an error.
+        </p>
+        <button onClick={() => { setPdfError(null); setFileUrl(f => f ? f + '?' + Date.now() : f) }}
+          className="text-xs px-3 py-1.5 rounded-lg font-bold transition-all hover:bg-white/[0.08]"
+          style={{ color: '#60a5fa', border: '1px solid rgba(37,99,235,0.3)' }}>
+          Retry
+        </button>
       </div>
     </div>
   )
