@@ -33,6 +33,7 @@ def init_db():
     from app.models import document, schema, job, user, guest  # noqa — registers all models
     from app.models import guest_activity  # noqa — registers activity + access request tables
     from app.models import lineage  # noqa — registers FieldLineage table (Feature 2)
+    from app.models import monitor  # noqa — registers MonitoredSource + MonitorRun (Feature 1)
     Base.metadata.create_all(bind=engine)
     _apply_migrations()
     _seed_preset_schemas()
@@ -453,6 +454,46 @@ def _apply_migrations():
             ("ai_provider",      "VARCHAR"),
             ("extraction_date",  "TIMESTAMP"),
             ("document_version", "VARCHAR"),
+        ],
+        # ── Feature 1: Continuous Document Intelligence ───────────────────────
+        "monitored_sources": [
+            ("id",                   "VARCHAR"),
+            ("user_id",              "VARCHAR"),
+            ("name",                 "VARCHAR"),
+            ("url",                  "VARCHAR"),
+            ("formats",              "JSON"),
+            ("doc_types",            "JSON"),
+            ("schedule",             "VARCHAR DEFAULT 'daily'"),
+            ("last_run_at",          "TIMESTAMP"),
+            ("next_run_at",          "TIMESTAMP"),
+            ("auto_extract",         "BOOLEAN DEFAULT 0"),
+            ("schema_id",            "VARCHAR"),
+            ("provider",             "VARCHAR"),
+            ("provider_model",       "VARCHAR"),
+            ("status",               "VARCHAR DEFAULT 'active'"),
+            ("error",                "TEXT"),
+            ("total_docs_seen",      "INTEGER DEFAULT 0"),
+            ("last_new_count",       "INTEGER DEFAULT 0"),
+            ("last_changed_count",   "INTEGER DEFAULT 0"),
+            ("last_removed_count",   "INTEGER DEFAULT 0"),
+            ("created_at",           "TIMESTAMP"),
+            ("updated_at",           "TIMESTAMP"),
+        ],
+        "monitor_runs": [
+            ("id",               "VARCHAR"),
+            ("source_id",        "VARCHAR"),
+            ("run_at",           "TIMESTAMP"),
+            ("duration_seconds", "FLOAT"),
+            ("triggered_by",     "VARCHAR DEFAULT 'scheduler'"),
+            ("pages_crawled",    "INTEGER DEFAULT 0"),
+            ("docs_found",       "INTEGER DEFAULT 0"),
+            ("new_count",        "INTEGER DEFAULT 0"),
+            ("changed_count",    "INTEGER DEFAULT 0"),
+            ("removed_count",    "INTEGER DEFAULT 0"),
+            ("changes",          "JSON"),
+            ("snapshot",         "JSON"),
+            ("status",           "VARCHAR DEFAULT 'running'"),
+            ("error",            "TEXT"),
         ],
     }
 

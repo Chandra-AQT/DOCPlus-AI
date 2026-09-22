@@ -10,6 +10,7 @@ import ExtractionLogsPage from './pages/ExtractionLogsPage'
 import SchemasPage from './pages/SchemasPage'
 import DashboardPage from './pages/DashboardPage'
 import LandingPage from './pages/LandingPage'
+import MonitorsPage from './pages/MonitorsPage'
 import GuestRegistrationPage from './pages/GuestRegistrationPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminPage from './pages/AdminPage'
@@ -95,6 +96,7 @@ export default function App() {
             <Route path="results"   element={<ResultsPage />} />
             <Route path="logs"      element={<ExtractionLogsPage />} />
             <Route path="schemas"   element={<SchemasPage />} />
+            <Route path="monitors"  element={<MonitorsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -10,6 +10,7 @@ import { useWorkflow } from '../lib/store'
 import { isGuest, isAdmin, getGuestSession, getGuestLimits, refreshGuestUsage } from '../lib/auth'
 import GuestTooltip from '../components/GuestTooltip'
 import RequestAccessModal from '../components/RequestAccessModal'
+import api from '../lib/api'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Quick Action Card
@@ -268,6 +269,103 @@ function AdminPanel() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Monitor Notification Card — Feature 1: Continuous Document Intelligence
+// Shows on Dashboard when monitors have detected new/changed documents
+// ─────────────────────────────────────────────────────────────────────────────
+function MonitorNotificationCard({ navigate }) {
+  const [data, setData] = useState(null)
+
+  useEffect(() => {
+    api.get('/api/v1/monitors/runs/recent?limit=5')
+      .then(r => setData(r.data))
+      .catch(() => {})
+  }, [])
+
+  // Only render when there are actual changes to show
+  if (!data || (!data.has_new && data.total === 0)) return null
+
+  const typeStyle = {
+    new:     { color: '#34d399', label: '+ New'    },
+    changed: { color: '#fbbf24', label: '~ Changed' },
+    removed: { color: '#f87171', label: '− Removed' },
+  }
+
+  return (
+    <div className="rounded-2xl overflow-hidden"
+      style={{ background: '#0d1526', border: '1px solid rgba(34,197,94,0.2)' }}>
+
+      {/* Header */}
+      <div className="px-5 py-3.5 flex items-center justify-between"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(34,197,94,0.05)' }}>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0" />
+          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#34d399' }}>
+            ● MONITOR UPDATES
+          </p>
+        </div>
+        <button onClick={() => navigate('/monitors')}
+          className="text-xs font-semibold" style={{ color: '#60a5fa' }}>
+          View all →
+        </button>
+      </div>
+
+      {/* Counts */}
+      <div className="px-5 py-3 flex items-center gap-5 flex-wrap"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        {data.new_count > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-black" style={{ color: '#34d399' }}>{data.new_count}</span>
+            <span className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.4)' }}>new</span>
+          </div>
+        )}
+        {data.changed_count > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-black" style={{ color: '#fbbf24' }}>{data.changed_count}</span>
+            <span className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.4)' }}>changed</span>
+          </div>
+        )}
+        {data.removed_count > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-black" style={{ color: '#f87171' }}>{data.removed_count}</span>
+            <span className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.4)' }}>removed</span>
+          </div>
+        )}
+        <span className="text-[10px] ml-auto" style={{ color: 'rgba(255,255,255,0.2)' }}>last 7 days</span>
+      </div>
+
+      {/* Recent change list */}
+      <div>
+        {data.changes.slice(0, 4).map((c, i) => {
+          const s = typeStyle[c.change_type] || { color: '#94a3b8', label: c.change_type }
+          return (
+            <div key={i} className="px-5 py-2.5 flex items-center gap-3"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded shrink-0"
+                style={{ background: `${s.color}18`, color: s.color }}>
+                {s.label}
+              </span>
+              <p className="text-[11px] font-semibold flex-1 truncate"
+                style={{ color: 'rgba(255,255,255,0.65)' }}>
+                {c.filename}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* CTA */}
+      <div className="px-5 py-3">
+        <button onClick={() => navigate('/monitors')}
+          className="w-full py-2 rounded-xl text-xs font-bold text-white transition-all hover:-translate-y-0.5"
+          style={{ background: 'linear-gradient(135deg,rgba(34,197,94,0.2),rgba(37,99,235,0.2))', border: '1px solid rgba(34,197,94,0.2)' }}>
+          View Monitors →
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // AI Engines Badge Row
 // ─────────────────────────────────────────────────────────────────────────────
 function EnginesBadges() {
@@ -502,6 +600,9 @@ export default function DashboardPage() {
 
           {/* Admin panel */}
           {adminUser && <AdminPanel />}
+
+          {/* Feature 1: Monitor change notifications — admin only */}
+          {adminUser && <MonitorNotificationCard navigate={navigate} />}
 
           {/* Guest Journey Checklist */}
           {guest && <GuestJourney state={state} />}

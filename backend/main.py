@@ -145,6 +145,47 @@ async def startup():
         logger.warning(f"[STARTUP] Could not clean stuck jobs: {e}")
     logger.info("DOCPlus AI+ platform started")
 
+    # ── Feature 1: Start continuous monitoring scheduler ──────────────────────
+    try:
+        from app.services.scheduler import start_scheduler
+        start_scheduler()
+        logger.info("[STARTUP] Monitor scheduler started")
+    except Exception as e:
+        logger.warning(f"[STARTUP] Monitor scheduler failed to start: {e}")
+
+    # ── Feature 1: Clean up stuck monitor runs from previous session ──────────
+    try:
+        from app.models.monitor import MonitorRun, MonitoredSource
+        db = SessionLocal()
+        stuck_runs = db.query(MonitorRun).filter(MonitorRun.status == "running").all()
+        if stuck_runs:
+            for mr in stuck_runs:
+                mr.status = "failed"
+                mr.error  = "Monitor interrupted — server was restarted."
+            db.commit()
+            logger.info(f"[STARTUP] Cleaned up {len(stuck_runs)} stuck monitor run(s)")
+        # Also reset any source stuck in "running" state
+        stuck_sources = db.query(MonitoredSource).filter(MonitoredSource.status == "running").all()
+        for ms in stuck_sources:
+            ms.status = "active"
+        if stuck_sources:
+            db.commit()
+            logger.info(f"[STARTUP] Reset {len(stuck_sources)} stuck monitor source(s) to active")
+        db.close()
+    except Exception as e:
+        logger.warning(f"[STARTUP] Could not clean stuck monitor runs: {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    """Gracefully stop the background scheduler on server shutdown."""
+    try:
+        from app.services.scheduler import stop_scheduler
+        stop_scheduler()
+        logger.info("[SHUTDOWN] Monitor scheduler stopped")
+    except Exception as e:
+        logger.warning(f"[SHUTDOWN] Scheduler stop error: {e}")
+
 
 @app.get("/health")
 async def health():

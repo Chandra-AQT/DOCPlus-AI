@@ -46,6 +46,46 @@ migrations = [
     ("field_lineage",   "ai_provider",      "TEXT DEFAULT NULL"),
     ("field_lineage",   "extraction_date",  "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
     ("field_lineage",   "document_version", "TEXT DEFAULT NULL"),
+
+    # ── Feature 1: Continuous Document Intelligence ────────────────────────────
+    # monitored_sources and monitor_runs created by create_all on first run.
+    # These entries handle upgrades on existing databases.
+    ("monitored_sources", "id",                   "TEXT DEFAULT NULL"),
+    ("monitored_sources", "user_id",               "TEXT DEFAULT NULL"),
+    ("monitored_sources", "name",                  "TEXT DEFAULT NULL"),
+    ("monitored_sources", "url",                   "TEXT DEFAULT NULL"),
+    ("monitored_sources", "formats",               "TEXT DEFAULT NULL"),
+    ("monitored_sources", "doc_types",             "TEXT DEFAULT NULL"),
+    ("monitored_sources", "schedule",              "TEXT DEFAULT 'daily'"),
+    ("monitored_sources", "last_run_at",           "TIMESTAMP DEFAULT NULL"),
+    ("monitored_sources", "next_run_at",           "TIMESTAMP DEFAULT NULL"),
+    ("monitored_sources", "auto_extract",          "INTEGER DEFAULT 0"),
+    ("monitored_sources", "schema_id",             "TEXT DEFAULT NULL"),
+    ("monitored_sources", "provider",              "TEXT DEFAULT NULL"),
+    ("monitored_sources", "provider_model",        "TEXT DEFAULT NULL"),
+    ("monitored_sources", "status",                "TEXT DEFAULT 'active'"),
+    ("monitored_sources", "error",                 "TEXT DEFAULT NULL"),
+    ("monitored_sources", "total_docs_seen",       "INTEGER DEFAULT 0"),
+    ("monitored_sources", "last_new_count",        "INTEGER DEFAULT 0"),
+    ("monitored_sources", "last_changed_count",    "INTEGER DEFAULT 0"),
+    ("monitored_sources", "last_removed_count",    "INTEGER DEFAULT 0"),
+    ("monitored_sources", "created_at",            "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+    ("monitored_sources", "updated_at",            "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+
+    ("monitor_runs", "id",               "TEXT DEFAULT NULL"),
+    ("monitor_runs", "source_id",        "TEXT DEFAULT NULL"),
+    ("monitor_runs", "run_at",           "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+    ("monitor_runs", "duration_seconds", "REAL DEFAULT NULL"),
+    ("monitor_runs", "triggered_by",     "TEXT DEFAULT 'scheduler'"),
+    ("monitor_runs", "pages_crawled",    "INTEGER DEFAULT 0"),
+    ("monitor_runs", "docs_found",       "INTEGER DEFAULT 0"),
+    ("monitor_runs", "new_count",        "INTEGER DEFAULT 0"),
+    ("monitor_runs", "changed_count",    "INTEGER DEFAULT 0"),
+    ("monitor_runs", "removed_count",    "INTEGER DEFAULT 0"),
+    ("monitor_runs", "changes",          "TEXT DEFAULT NULL"),
+    ("monitor_runs", "snapshot",         "TEXT DEFAULT NULL"),
+    ("monitor_runs", "status",           "TEXT DEFAULT 'running'"),
+    ("monitor_runs", "error",            "TEXT DEFAULT NULL"),
 ]
 
 def column_exists(conn, table, column):

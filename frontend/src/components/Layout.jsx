@@ -143,6 +143,7 @@ const NAV = [
   { to: '/results',   icon: BarChart3,        label: 'Results',           desc: 'Step 12: Review data' },
   { to: '/logs',      icon: FileText,         label: 'Extraction Logs',   desc: 'Job history & status' },
   { to: '/schemas',   icon: Layers3,          label: 'Schemas',           desc: 'Manage schemas' },
+  { to: '/monitors',  icon: Upload,           label: 'Monitors',          desc: 'Continuous doc intelligence' },
 ]
 
 export default function Layout() {
